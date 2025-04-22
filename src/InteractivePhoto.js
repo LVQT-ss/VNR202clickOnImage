@@ -3,11 +3,28 @@ import hcm from './HCM.jpg';
 
 export default function InteractivePhoto() {
     const [showQuestion, setShowQuestion] = useState(false);
+    const [currentQuestion, setCurrentQuestion] = useState(null);
     const [userAnswer, setUserAnswer] = useState('');
     const [showSuccess, setShowSuccess] = useState(false);
+    const [correctAnswers, setCorrectAnswers] = useState(0);
     const inputRef = useRef(null);
 
-    const correctAnswer = "Nguyễn Ái Quốc";
+    const questions = [
+        {
+            id: 1,
+            question: "Khi Bác soạn thảo cương lĩnh chính trị vào năm 1930 lấy tên là gì?",
+            instruction: "Ghi hoa chữ cái đầu dòng và có dấu",
+            answer: "Nguyễn Ái Quốc",
+            region: { startX: 45, endX: 65, startY: 10, endY: 50 }
+        },
+        {
+            id: 2,
+            question: "Cương lĩnh chính trị của Bác ra đời vào năm nào?",
+            instruction: "Nhập số năm",
+            answer: "1930",
+            region: { startX: 10, endX: 30, startY: 5, endY: 20 }
+        }
+    ];
 
     const handleImageClick = (e) => {
         // Tính toán vị trí click tương đối với hình ảnh
@@ -19,26 +36,33 @@ export default function InteractivePhoto() {
         const percentX = (x / rect.width) * 100;
         const percentY = (y / rect.height) * 100;
 
-        // Kiểm tra nếu click vào khu vực đã đánh dấu
-        if (percentX >= 45 && percentX <= 65 && percentY >= 10 && percentY <= 50) {
-            setShowQuestion(true);
-            setUserAnswer('');
-            setShowSuccess(false);
-            // Focus vào input khi hiển thị câu hỏi
-            setTimeout(() => {
-                if (inputRef.current) {
-                    inputRef.current.focus();
-                }
-            }, 100);
-        } else {
-            setShowQuestion(false);
+        // Kiểm tra nếu click vào khu vực của các câu hỏi
+        for (const q of questions) {
+            const { startX, endX, startY, endY } = q.region;
+            if (percentX >= startX && percentX <= endX && percentY >= startY && percentY <= endY) {
+                setCurrentQuestion(q);
+                setShowQuestion(true);
+                setUserAnswer('');
+                setShowSuccess(false);
+                // Focus vào input khi hiển thị câu hỏi
+                setTimeout(() => {
+                    if (inputRef.current) {
+                        inputRef.current.focus();
+                    }
+                }, 100);
+                return;
+            }
         }
+
+        // Nếu không click vào khu vực nào
+        setShowQuestion(false);
     };
 
     const handleSubmitAnswer = () => {
-        if (userAnswer.trim().toLowerCase() === correctAnswer.toLowerCase()) {
-            // Nếu đáp án đúng, hiển thị thông báo chúc mừng
+        if (currentQuestion && userAnswer.trim().toLowerCase() === currentQuestion.answer.toLowerCase()) {
+            // Nếu đáp án đúng, hiển thị thông báo chúc mừng và tăng số câu trả lời đúng
             setShowSuccess(true);
+            setCorrectAnswers(prev => prev + 1);
         } else {
             // Nếu đáp án sai, chuyển hướng tới YouTube
             window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
@@ -53,6 +77,12 @@ export default function InteractivePhoto() {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+            <div className="mb-4 text-center">
+                <div className="inline-block bg-blue-100 px-4 py-2 rounded-lg shadow">
+                    <span className="font-bold text-blue-800">Số câu trả lời đúng: {correctAnswers}/{questions.length}</span>
+                </div>
+            </div>
+
             <div className="relative w-full max-w-2xl">
                 <img
                     src={hcm}
@@ -66,22 +96,33 @@ export default function InteractivePhoto() {
                     onClick={handleImageClick}
                 />
 
-                {/* Vùng đánh dấu */}
+                {/* Vùng đánh dấu cho câu hỏi 1 */}
                 <div className="absolute" style={{
-                    top: '10%',
-                    left: '45%',
-                    width: '20%',
-                    height: '40%',
-                    border: '2px',
+                    top: `${questions[0].region.startY}%`,
+                    left: `${questions[0].region.startX}%`,
+                    width: `${questions[0].region.endX - questions[0].region.startX}%`,
+                    height: `${questions[0].region.endY - questions[0].region.startY}%`,
+                    border: '2px ',
                     opacity: 0.5,
                     pointerEvents: 'none'
                 }}></div>
 
-                {showQuestion && !showSuccess && (
+                {/* Vùng đánh dấu cho câu hỏi 2 */}
+                <div className="absolute" style={{
+                    top: `${questions[1].region.startY}%`,
+                    left: `${questions[1].region.startX}%`,
+                    width: `${questions[1].region.endX - questions[1].region.startX}%`,
+                    height: `${questions[1].region.endY - questions[1].region.startY}%`,
+                    border: '2px dashed red',
+                    opacity: 0.5,
+                    pointerEvents: 'none'
+                }}></div>
+
+                {showQuestion && !showSuccess && currentQuestion && (
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="bg-white p-6 rounded-lg shadow-xl text-center w-5/6 max-w-md">
-                            <h2 className="text-xl font-bold text-gray-800 mb-4">Khi Bác soạn thảo cương lĩnh chính trị vào năm 1930 lấy tên là gì?</h2>
-                            <h2 className="text-xl font-bold text-blue-800 mb-4">Ghi hoa chữ cái đầu dòng và có dấu </h2>
+                            <h2 className="text-xl font-bold text-gray-800 mb-4">{currentQuestion.question}</h2>
+                            <h2 className="text-xl font-bold text-blue-800 mb-4">{currentQuestion.instruction}</h2>
                             <div className="mb-4">
                                 <input
                                     ref={inputRef}
@@ -133,7 +174,7 @@ export default function InteractivePhoto() {
 
             <div className="mt-4 text-gray-600 text-center">
                 <p>Nhấp vào đâu đó trên hình ảnh để hiển thị câu hỏi.</p>
-
+                <p className="text-sm mt-2">Gợi ý: Có 2 câu hỏi ẩn trong hình ảnh.</p>
             </div>
         </div>
     );
