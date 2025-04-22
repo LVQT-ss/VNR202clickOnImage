@@ -22,7 +22,7 @@ export default function InteractivePhoto() {
             question: "Cương lĩnh chính trị của Bác ra đời vào năm nào?",
             instruction: "Nhập số năm",
             answer: "1930",
-            region: { startX: 10, endX: 30, startY: 5, endY: 20 }
+            region: { startX: 2, endX: 40, startY: 5, endY: 20 }
         }
     ];
 
