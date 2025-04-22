@@ -113,7 +113,7 @@ export default function InteractivePhoto() {
                     left: `${questions[1].region.startX}%`,
                     width: `${questions[1].region.endX - questions[1].region.startX}%`,
                     height: `${questions[1].region.endY - questions[1].region.startY}%`,
-                    border: '2px dashed red',
+                    border: '2px',
                     opacity: 0.5,
                     pointerEvents: 'none'
                 }}></div>
