@@ -1,5 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import hcm from './HCM.jpg';
+import victoryMusic from './victory.mp3'; // File nhạc chiến thắng
+import award from './award.png'; // Hình ảnh lên bục giảng
 
 export default function InteractivePhoto() {
     const [showQuestion, setShowQuestion] = useState(false);
@@ -8,6 +10,7 @@ export default function InteractivePhoto() {
     const [showSuccess, setShowSuccess] = useState(false);
     const [correctAnswers, setCorrectAnswers] = useState(0);
     const inputRef = useRef(null);
+    const audioRef = useRef(null);
 
     const questions = [
         {
@@ -26,17 +29,20 @@ export default function InteractivePhoto() {
         }
     ];
 
+    useEffect(() => {
+        if (correctAnswers === questions.length) {
+            audioRef.current?.play();
+        }
+    }, [correctAnswers]);
+
     const handleImageClick = (e) => {
-        // Tính toán vị trí click tương đối với hình ảnh
         const rect = e.target.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        // Tính toán tỷ lệ phần trăm của vị trí click
         const percentX = (x / rect.width) * 100;
         const percentY = (y / rect.height) * 100;
 
-        // Kiểm tra nếu click vào khu vực của các câu hỏi
         for (const q of questions) {
             const { startX, endX, startY, endY } = q.region;
             if (percentX >= startX && percentX <= endX && percentY >= startY && percentY <= endY) {
@@ -44,7 +50,6 @@ export default function InteractivePhoto() {
                 setShowQuestion(true);
                 setUserAnswer('');
                 setShowSuccess(false);
-                // Focus vào input khi hiển thị câu hỏi
                 setTimeout(() => {
                     if (inputRef.current) {
                         inputRef.current.focus();
@@ -54,17 +59,14 @@ export default function InteractivePhoto() {
             }
         }
 
-        // Nếu không click vào khu vực nào
         setShowQuestion(false);
     };
 
     const handleSubmitAnswer = () => {
         if (currentQuestion && userAnswer.trim().toLowerCase() === currentQuestion.answer.toLowerCase()) {
-            // Nếu đáp án đúng, hiển thị thông báo chúc mừng và tăng số câu trả lời đúng
             setShowSuccess(true);
             setCorrectAnswers(prev => prev + 1);
         } else {
-            // Nếu đáp án sai, chuyển hướng tới YouTube
             window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
         }
     };
@@ -77,6 +79,8 @@ export default function InteractivePhoto() {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+            <audio ref={audioRef} src={victoryMusic} />
+
             <div className="mb-4 text-center">
                 <div className="inline-block bg-blue-100 px-4 py-2 rounded-lg shadow">
                     <span className="font-bold text-blue-800">Số câu trả lời đúng: {correctAnswers}/{questions.length}</span>
@@ -96,44 +100,32 @@ export default function InteractivePhoto() {
                     onClick={handleImageClick}
                 />
 
-                {/* Vùng đánh dấu cho câu hỏi 1 */}
-                <div className="absolute" style={{
-                    top: `${questions[0].region.startY}%`,
-                    left: `${questions[0].region.startX}%`,
-                    width: `${questions[0].region.endX - questions[0].region.startX}%`,
-                    height: `${questions[0].region.endY - questions[0].region.startY}%`,
-                    border: '2px ',
-                    opacity: 0.5,
-                    pointerEvents: 'none'
-                }}></div>
-
-                {/* Vùng đánh dấu cho câu hỏi 2 */}
-                <div className="absolute" style={{
-                    top: `${questions[1].region.startY}%`,
-                    left: `${questions[1].region.startX}%`,
-                    width: `${questions[1].region.endX - questions[1].region.startX}%`,
-                    height: `${questions[1].region.endY - questions[1].region.startY}%`,
-                    border: '2px',
-                    opacity: 0.5,
-                    pointerEvents: 'none'
-                }}></div>
+                {questions.map((q, i) => (
+                    <div key={i} className="absolute" style={{
+                        top: `${q.region.startY}%`,
+                        left: `${q.region.startX}%`,
+                        width: `${q.region.endX - q.region.startX}%`,
+                        height: `${q.region.endY - q.region.startY}%`,
+                        border: '2px',
+                        opacity: 0.5,
+                        pointerEvents: 'none'
+                    }}></div>
+                ))}
 
                 {showQuestion && !showSuccess && currentQuestion && (
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="bg-white p-6 rounded-lg shadow-xl text-center w-5/6 max-w-md">
                             <h2 className="text-xl font-bold text-gray-800 mb-4">{currentQuestion.question}</h2>
                             <h2 className="text-xl font-bold text-blue-800 mb-4">{currentQuestion.instruction}</h2>
-                            <div className="mb-4">
-                                <input
-                                    ref={inputRef}
-                                    type="text"
-                                    value={userAnswer}
-                                    onChange={(e) => setUserAnswer(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Nhập câu trả lời của bạn"
-                                />
-                            </div>
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={userAnswer}
+                                onChange={(e) => setUserAnswer(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+                                placeholder="Nhập câu trả lời của bạn"
+                            />
 
                             <div className="flex space-x-2 justify-center">
                                 <button
@@ -176,6 +168,19 @@ export default function InteractivePhoto() {
                 <p>Nhấp vào đâu đó trên hình ảnh để hiển thị câu hỏi.</p>
                 <p className="text-sm mt-2">Gợi ý: Có 2 câu hỏi ẩn trong hình ảnh.</p>
             </div>
+
+            {correctAnswers === questions.length && (
+                <div className="mt-8 flex flex-col items-center">
+                    <img
+                        src={award}
+                        alt="Nhận thưởng"
+                        className="w-40 h-40 animate-bounce mb-4"
+                    />
+                    <div className="bg-yellow-100 px-6 py-4 rounded-xl shadow-lg border border-yellow-400 text-yellow-700 text-lg font-semibold">
+                        Bạn đã trả lời đúng tất cả! Vinh danh trên bục giảng 🎓
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
